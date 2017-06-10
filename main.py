@@ -108,8 +108,8 @@ mydata = {"TransmitterId": "0", "_id": 1, "CaptureDateTime": 0, "RelativeTime": 
 
 def send_to_mongo(data):
 	key = None
-	db = 'nightscout'
-	collection = 'SnirData'
+	db = 'romcy'
+	collection = 'entries'
 	if not key:
 		return
 	try:
@@ -135,7 +135,7 @@ def send_to_mongo(data):
 			raise  # debug only
 
 
-def save_record_to_memcache(this_set, my_data, write_only=False):
+def save_record_to_memcache(this_set, my_data, write_only=True):
 	ret_val = 0
 	mcname = '{}alldata'.format(this_set)
 
