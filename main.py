@@ -39,7 +39,7 @@ max_memcache_entries = 12
 # guessed a transmitter id. If you don't want to bother with setting a passcode then you can set this to false.
 require_passcode = True
 
-use_geolocation = True
+use_geolocation = False
 
 google_maps_url = "https://maps.google.com/?q="
 
@@ -96,7 +96,8 @@ google_maps_url = "https://maps.google.com/?q="
 # Please see http://docs.mlab.com/data-api/ for instructions on how to get the key.
 
 # Set to True when in development
-master_debug = environ['SERVER_SOFTWARE'].startswith('Development')
+# master_debug = environ['SERVER_SOFTWARE'].startswith('Development')
+master_debug = True
 
 # Output Template
 mydata = {"TransmitterId": "0", "_id": 1, "CaptureDateTime": 0, "RelativeTime": 0,
@@ -108,8 +109,8 @@ mydata = {"TransmitterId": "0", "_id": 1, "CaptureDateTime": 0, "RelativeTime": 
 
 def send_to_mongo(data):
 	key = None
-	db = 'romcy'
-	collection = 'entries'
+	db = 'nightscout'
+	collection = 'SnirData'
 	if not key:
 		return
 	try:
@@ -135,7 +136,7 @@ def send_to_mongo(data):
 			raise  # debug only
 
 
-def save_record_to_memcache(this_set, my_data, write_only=True):
+def save_record_to_memcache(this_set, my_data, write_only=False):
 	ret_val = 0
 	mcname = '{}alldata'.format(this_set)
 
@@ -327,13 +328,15 @@ def parakeetreceiver():
 			mydata['BatteryLife'] = str(int(data.db))
 			mydata['TransmissionId'] = str(int(data.ti))
 			if (data.zi != "0"):
-				mydata['TransmitterId'] = str(int(data.zi))  # might need conversion back to ascii
+			#	mydata['TransmitterId'] = str(int(data.zi))  might need conversion back to ascii
+                mydata['TransmitterId'] = data.zi  # might need conversion back to ascii
 			else:
 				return "ERR - no transmitter id - upgrade"
 
 			# don't forget the GL parameter!
-			ascii_tx_id = dex_src_to_asc(int(data.zi))
-			if (master_debug == True):
+			# ascii_tx_id = dex_src_to_asc(int(data.zi))
+			ascii_tx_id = data.zi
+            if (master_debug == True):
 				reply = "!ACK" + "-" + ascii_tx_id
 			else:
 				reply = "!ACK "
@@ -344,8 +347,8 @@ def parakeetreceiver():
 				mydata['GeoLocation'] = ""
 
 			if (require_passcode == True):
-				ascii_tx_id = ascii_tx_id + "-" + data.pc
-
+			#	ascii_tx_id = ascii_tx_id + "-" + data.pc
+				ascii_tx_id = data.zi + "-" + data.pc
 			ret_val = save_record_to_memcache(ascii_tx_id, mydata)
 			if ret_val > -1:
 				send_to_mongo(mydata)
